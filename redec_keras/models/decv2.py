@@ -11,7 +11,7 @@ import dec_keras.DEC
 from redec_keras.models.utils import get_cluster_to_label_mapping_safe, \
         calc_f1_score, one_percent_fpr
 from redec_keras.models.utils import Metrics
-from redec_keras.models.utils import pca_plotv2
+from redec_keras.utils.pca_plot import PCA_Plot
 import redec_keras.models.utils as utils
 
 
@@ -97,7 +97,7 @@ class DECv2(dec_keras.DEC):
             update_interval=self.config.update_interval,
             save_dir=self.config.save_dir)
 
-    def report_run(self, splits):
+    def report_run(self, splits, make_samples=False):
         name = self.config.name
         save_dir = self.config.save_dir
 
@@ -110,9 +110,18 @@ class DECv2(dec_keras.DEC):
 
         metrics = self.calculate_metrics((x, y), (x_test, y_test))
 
-        pca_plot, pca = pca_plotv2(
-            self, x_train, y_train, self.config.n_clusters, title=name)
-        pca_plot.savefig(os.path.join(save_dir, 'pca_plot.png'))
+        pca_plot = PCA_Plot(self, x_train, y_train,
+                            self.config.n_clusters,
+                            title=name,
+                            make_samples=make_samples)
+
+        fig = pca_plot.plot()
+        fig.savefig(os.path.join(save_dir, 'pca_plot.png'))
+        if make_samples:
+            pca_plot.plot_samples(save_dir)
+        # pca_plot, pca = pca_plotv2(
+            # self, x_train, y_train, self.config.n_clusters, title=name)
+        # pca_plot.savefig(os.path.join(save_dir, 'pca_plot.png'))
 
         cmap = self.get_cluster_map(x_train, y_train)
 

@@ -401,119 +401,120 @@ def get_cluster_centres(dec):
         dec.model.get_layer(name='clustering').get_weights()))
 
 
-def pca_plotv2(dec, x, y, n_clusters, title):
-    y_pred = dec.predict_clusters(x)
+# def pca_plotv2(dec, x, y, n_clusters, title):
+    # y_pred = dec.predict_clusters(x)
 
-    cluster_centers = dec.model.get_layer(name='clustering')
-    cluster_centers = cluster_centers.get_weights()
-    cluster_centers = np.squeeze(np.array(cluster_centers))
+    # cluster_centers = dec.model.get_layer(name='clustering')
+    # cluster_centers = cluster_centers.get_weights()
+    # cluster_centers = np.squeeze(np.array(cluster_centers))
 
-    labels = [str(i) for i in range(n_clusters)]
+    # labels = [str(i) for i in range(n_clusters)]
     
-    unique = np.unique(y_pred)
-    cluster_ids = unique
-    cluster_centers = cluster_centers[unique,:]
-    labels = np.array(labels)[unique]
+    # unique = np.unique(y_pred)
+    # cluster_ids = unique
+    # cluster_centers = cluster_centers[unique,:]
+    # labels = np.array(labels)[unique]
     
-    return _pca_plotv2(
-        dec, x, y, y_pred, cluster_centers, cluster_ids, labels=labels, title=title)
+    # return _pca_plotv2(
+        # dec, x, y, y_pred, cluster_centers, cluster_ids, labels=labels, title=title)
 
 
-def _pca_plotv2(dec, x, y, y_pred, cluster_centres, cluster_ids, labels,
-                ulcolour='#747777', ccolour='#4D6CFA', title=None):
-    base_network = dec.encoder
+# def _pca_plotv2(dec, x, y, y_pred, cluster_centres, cluster_ids, labels,
+                # ulcolour='#747777', ccolour='#4D6CFA', title=None):
+    # base_network = dec.encoder
 
-    pca = PCA(n_components=3)
-    x_pca = pca.fit_transform(base_network.predict(x))
-    print(pca.explained_variance_ratio_)
-    c_pca = pca.transform(cluster_centres)
+    # pca = PCA(n_components=3)
+    # x_pca = pca.fit_transform(base_network.predict(x))
+    # print(pca.explained_variance_ratio_)
+    # c_pca = pca.transform(cluster_centres)
 
-    fig = plt.figure(figsize=(16, 8))
-    ax1 = fig.add_subplot(121)
-    ax2 = fig.add_subplot(122)
+    # fig = plt.figure(figsize=(16, 8))
+    # ax1 = fig.add_subplot(121)
+    # ax2 = fig.add_subplot(122)
     
-    ax = [ax1, ax2]
-    y = [y.astype(np.int), y_pred]
-    subtitle = ['Color by Class', 'Color by Cluster']
+    # ax = [ax1, ax2]
+    # y = [y.astype(np.int), y_pred]
+    # subtitle = ['Color by Class', 'Color by Cluster']
     
-    for ax, y, subtitle in zip(ax, y, subtitle):
-        unique_targets = list(np.unique(y))
+    # for ax, y, subtitle in zip(ax, y, subtitle):
+        # unique_targets = list(np.unique(y))
 
-        N = len(unique_targets)
-        cmap = discrete_cmap(N, 'jet')
-        norm = matplotlib.colors.BoundaryNorm(
-            np.arange(0, max(3, N), 1), max(3, N))
+        # N = len(unique_targets)
+        # cmap = discrete_cmap(N, 'jet')
+        # norm = matplotlib.colors.BoundaryNorm(
+            # np.arange(0, max(3, N), 1), max(3, N))
 
-        if -1 in unique_targets:
-            unique_targets.remove(-1)
-        for i, l in enumerate(unique_targets):
-            _x = x_pca[np.where(y == l), 0]
-            _y = x_pca[np.where(y == l), 1]
-            _c = i * np.ones(_x.shape)
-            ax.scatter(_x, _y, marker='o', s=5, c=_c,
-                       cmap=cmap, norm=norm, alpha=0.2, label=labels[np.where(cluster_ids==l)])
+        # if -1 in unique_targets:
+            # unique_targets.remove(-1)
+        # for i, l in enumerate(unique_targets):
+            # _x = x_pca[np.where(y == l), 0]
+            # _y = x_pca[np.where(y == l), 1]
+            # _c = i * np.ones(_x.shape)
+            # ax.scatter(_x, _y, marker='o', s=5, c=_c,
+                       # cmap=cmap, norm=norm, alpha=0.2, label=labels[np.where(cluster_ids==l)])
             
-        ax.scatter(
-            c_pca[:,0], c_pca[:,1],
-            marker='o', s=40, color=ccolour, alpha=1.0, label='cluster centre')
-        for i in range(len(cluster_centres)):
-            ax.text(c_pca[i,0], c_pca[i,1], str(i), size=20)
-        ax.set_title(subtitle)    
-        ax.set_axis_off()
+        # ax.scatter(
+            # c_pca[:,0], c_pca[:,1],
+            # marker='o', s=40, color=ccolour, alpha=1.0, label='cluster centre')
+        # for i in range(len(cluster_centres)):
+            # ax.text(c_pca[i,0], c_pca[i,1], str(i), size=20)
+        # ax.set_title(subtitle)    
+        # ax.set_axis_off()
 
-    fig.suptitle(title)
-    return fig, pca
-
-
-def pca_plot(base_network, x, cluster_centres, y=None, labels=[],
-             lcolours=[], ulcolour='#747777', ccolour='#4D6CFA'):
-    pca = PCA(n_components=2)
-    x_pca = pca.fit_transform(np.nan_to_num(base_network.predict(x)))
-    c_pca = pca.transform(cluster_centres)
-    fig = plt.figure(figsize=(6,6))
-    ax = fig.add_subplot(111)
-    if np.any(y):
-        unique_targets = list(np.unique(y))
-        if -1 in unique_targets:
-            ax.scatter(
-                x_pca[np.where(y == -1), 0],
-                x_pca[np.where(y == -1), 1],
-                marker='o',
-                s=20,
-                color=ulcolour, alpha=0.1)
-            unique_targets.remove(-1)
-        for l in unique_targets:
-            l = int(l)
-            ax.scatter(
-                x_pca[np.where(y == l), 0],
-                x_pca[np.where(y == l), 1],
-                marker='o', s=5,
-                color=lcolours[l],
-                alpha=0.7,
-                label=labels[l])
-    else:
-        ax.scatter(
-            x_pca[:,0], x_pca[:,1],
-            marker='o', s=20, color=ulcolour, alpha=0.7)
-    ax.scatter(
-        c_pca[:,0], c_pca[:,1],
-        marker='o', s=40, color=ccolour, alpha=1.0, label='cluster centre')
-
-    for i in range(len(cluster_centres)):
-        ax.text(c_pca[i,0], c_pca[i,1], str(i), size=20)
-    plt.axis('off')
-    #plt.legend(ncol=2)
-    plt.show()
+    # fig.suptitle(title)
+    # return fig, pca
 
 
-def discrete_cmap(N, base_cmap=None):
-    """Create an N-bin discrete colormap from the specified input map"""
+# def pca_plot(base_network, x, cluster_centres, y=None, labels=[],
+             # lcolours=[], ulcolour='#747777', ccolour='#4D6CFA'):
+    # pca = PCA(n_components=2)
+    # x_pca = pca.fit_transform(np.nan_to_num(base_network.predict(x)))
+    # c_pca = pca.transform(cluster_centres)
+    # fig = plt.figure(figsize=(6,6))
+    # ax = fig.add_subplot(111)
+    # if np.any(y):
+        # unique_targets = list(np.unique(y))
+        # if -1 in unique_targets:
+            # ax.scatter(
+                # x_pca[np.where(y == -1), 0],
+                # x_pca[np.where(y == -1), 1],
+                # marker='o',
+                # s=20,
+                # color=ulcolour, alpha=0.1)
+            # unique_targets.remove(-1)
+        # for l in unique_targets:
+            # l = int(l)
+            # ax.scatter(
+                # x_pca[np.where(y == l), 0],
+                # x_pca[np.where(y == l), 1],
+                # marker='o', s=5,
+                # color=lcolours[l],
+                # alpha=0.7,
+                # label=labels[l])
+    # else:
+        # ax.scatter(
+            # x_pca[:,0], x_pca[:,1],
+            # marker='o', s=20, color=ulcolour, alpha=0.7)
+    # ax.scatter(
+        # c_pca[:,0], c_pca[:,1],
+        # marker='o', s=40, color=ccolour, alpha=1.0, label='cluster centre')
 
-    # Note that if base_cmap is a string or None, you can simply do
-    #    return plt.cm.get_cmap(base_cmap, N)
-    # The following works for string, None, or a colormap instance:
+    # for i in range(len(cluster_centres)):
+        # ax.text(c_pca[i,0], c_pca[i,1], str(i), size=20)
+    # plt.axis('off')
+    # #plt.legend(ncol=2)
+    # plt.show()
 
-    base = plt.cm.get_cmap(base_cmap)
-    color_list = base(np.linspace(0, 1, N))
-    cmap_name = base.name + str(N)
-    return LinearSegmentedColormap.from_list(cmap_name, color_list, N)
+
+# def discrete_cmap(N, base_cmap=None):
+    # """Create an N-bin discrete colormap from the specified input map"""
+
+    # # Note that if base_cmap is a string or None, you can simply do
+    # #    return plt.cm.get_cmap(base_cmap, N)
+    # # The following works for string, None, or a colormap instance:
+
+    # base = plt.cm.get_cmap(base_cmap)
+    # color_list = base(np.linspace(0, 1, N))
+    # cmap_name = base.name + str(N)
+    # return matplotlib.colors.LinearSegmentedColormap \
+            # .from_list(cmap_name, color_list, N)
