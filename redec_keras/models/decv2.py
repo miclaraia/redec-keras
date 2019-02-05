@@ -52,7 +52,7 @@ class DECv2(dec_keras.DEC):
 
     @classmethod
     def load(cls, save_dir, x_train, verbose=True):
-        config = Config.load(os.path.join(save_dir, 'config.json'))
+        config = Config.load(save_dir)
         input_shape = x_train.shape
 
         self = cls(config, input_shape)

@@ -89,7 +89,7 @@ class MultitaskDEC(decv2.DECv2):
 
     @classmethod
     def load(cls, save_dir, x_train, verbose=True):
-        config = Config.load(os.path.join(save_dir, 'config.json'))
+        config = Config.load(save_dir)
         dec_weights = config.save_weights[1]
         input_shape = x_train.shape
 

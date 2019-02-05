@@ -27,8 +27,7 @@ def train(
         raise FileNotFoundError(source_dir)
     os.makedirs(save_dir)
 
-    source_config = MultitaskConfig.load(os.path.join(
-        source_dir, 'config.json'))
+    source_config = MultitaskConfig.load(source_dir)
 
     splits_file = source_config.splits_file
 

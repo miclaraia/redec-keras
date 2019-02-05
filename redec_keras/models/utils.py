@@ -56,7 +56,8 @@ class Config:
         json.dump(self.__dict__, open(fname, 'w'))
 
     @classmethod
-    def load(cls, fname):
+    def load(cls, save_dir):
+        fname = os.path.join(save_dir, 'config.json')
         data = json.load(open(fname, 'r'))
         if 'source_dir' not in data:
             data['source_dir'] = os.path.dirname(data['source_weights'][0])

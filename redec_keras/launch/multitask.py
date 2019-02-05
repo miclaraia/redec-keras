@@ -26,8 +26,7 @@ def train(
         raise FileNotFoundError(source_dir)
     os.makedirs(save_dir)
 
-    source_config = SourceConfig.load(os.path.join(
-        source_dir, 'config.json'))
+    source_config = SourceConfig.load(source_dir)
     splits_file = source_config.splits_file
 
     with open(splits_file, 'rb') as f:

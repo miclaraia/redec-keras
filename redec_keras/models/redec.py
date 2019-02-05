@@ -50,12 +50,15 @@ class ReDEC(decv2.DECv2):
 
     @classmethod
     def load(cls, save_dir, x_train, verbose=True):
-        config = Config.load(os.path.join(save_dir, 'config.json'))
+        config = Config.load(save_dir)
         input_shape = x_train.shape
 
         self = cls(config, input_shape)
-        with open(os.path.join(save_dir, 'metrics.pkl'), 'rb') as f:
-            self.metrics = pickle.load(f)
+        try:
+            with open(os.path.join(save_dir, 'metrics.pkl'), 'rb') as f:
+                self.metrics = pickle.load(f)
+        except ModuleNotFoundError:
+            self.metrics = None
 
         self.init(x_train, verbose)
 
