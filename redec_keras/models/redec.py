@@ -26,6 +26,7 @@ import redec_keras.models.decv2 as decv2
 class Config(decv2.Config):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.type = 'redec'
         self.save_interval = kwargs.get('save_interval') or 5
         self.update_interval = kwargs.get('update_interval') or 140
 

@@ -23,6 +23,7 @@ class Config:
             self, save_dir, splits_file, source_dir,
             source_weights, save_weights,
             **kwargs):
+        self.config = None
         self.save_dir  = save_dir
         self.name = kwargs.get('name')
         self.n_classes = kwargs.get('n_classes') or 2

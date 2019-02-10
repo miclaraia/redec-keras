@@ -20,6 +20,7 @@ class Config(utils.Config):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        self.config = 'decv2'
         self.update_interval = kwargs.get('update_interval') or 140
 
 

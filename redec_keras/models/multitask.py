@@ -49,6 +49,7 @@ logger = logging.getLogger(__name__)
 class Config(decv2.Config):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.type = 'multitask'
         self.maxiter = kwargs.get('maxiter') or 80
         self.update_interval = kwargs.get('update_interval') or 1
         self.alpha = kwargs.get('alpha') or 1.0
