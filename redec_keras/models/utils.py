@@ -42,6 +42,28 @@ class Config:
         self.source_weights = source_weights
         self.save_weights = save_weights
 
+    @classmethod
+    def new(cls, save_dir, source_dir, splits_file, **kwargs):
+        source_config = cls.load(source_dir)
+
+        ae_weights = os.path.join(save_dir, 'ae_weights.h5')
+        dec_weights = os.path.join(save_dir, 'DEC_model_final.h5')
+
+        kwargs.update({
+            'save_weights': (ae_weights, dec_weights),
+            'splits_file': splits_file
+        })
+
+        if source_dir:
+            kwargs.update({
+                'n_clusters': source_config.n_clusters,
+                'nodes': source_config.nodes,
+                'source_dir': source_dir,
+                'source_weights': source_config.save_weights,
+            })
+
+        return cls(**kwargs)
+
     def get_optimizer(self):
         optimizer, kwargs = self.optimizer
         print(optimizer, kwargs)
@@ -53,6 +75,12 @@ class Config:
         return optimizer
 
     def dump(self):
+        if self.source_weights:
+            if not os.path.isfile(self.save_weights[0]):
+                shutil.copyfile(self.source_weights[0], self.save_weights[0])
+            if not os.path.isfile(self.save_weights[1]):
+                shutil.copyfile(self.source_weights[1], self.save_weights[1])
+
         fname = os.path.join(self.save_dir, 'config.json')
         json.dump(self.__dict__, open(fname, 'w'))
 

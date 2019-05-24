@@ -1,27 +1,35 @@
 import numpy as np
 import random
 from collections import Counter
+import logging
 
-from muon.dissolving.decv2 import DECv2
+logger = logging.getLogger(__name__)
 
 
 class EfficiencyStudy:
 
     @classmethod
-    def run(cls, save_dir, x, y, n_trials=5):
-        dec = DECv2.load(save_dir, x)
+    def run(cls, dec, x, y, n_trials=5, sample_size=25):
+        # dec = DECv2.load(save_dir, x)
 
         y_pred = dec.predict_clusters(x)
         n_classes = dec.config.n_classes
         n_clusters = dec.config.n_clusters
 
-        total = 0
-        for i in range(n_trials):
-            total += cls._simulate(
-                y, y_pred, n_classes, n_clusters, sample_size=25)
-        mean = total / float(n_trials)
-        print(mean)
-        return mean
+        return cls._simulate_trials(
+            y, y_pred, n_trials, n_classes,
+            n_clusters, sample_size=sample_size)
+
+    @classmethod
+    def _simulate_trials(cls, y, y_pred, n_trials, n_classes,
+                         n_clusters, sample_size):
+        trials = []
+        for _ in range(n_trials):
+            trials.append(cls._simulate(
+                y, y_pred, n_classes, n_clusters, sample_size=sample_size))
+            logger.info(trials[-1])
+
+        return np.mean(trials), np.std(trials, ddof=1)
 
     @staticmethod
     def _simulate(y, y_pred, n_classes, n_clusters, sample_size=25):

@@ -1,6 +1,7 @@
 import os
 import numpy as np
 import pickle
+import logging
 
 from keras.optimizers import SGD
 from sklearn.metrics import f1_score
@@ -13,6 +14,9 @@ from redec_keras.models.utils import get_cluster_to_label_mapping_safe, \
 from redec_keras.models.utils import Metrics
 from redec_keras.utils.pca_plot import PCA_Plot
 import redec_keras.models.utils as utils
+from redec_keras.experiments.simulate_efficiency import EfficiencyStudy
+
+logger = logging.getLogger(__name__)
 
 
 class Config(utils.Config):
@@ -110,6 +114,7 @@ class DECv2(dec_keras.DEC):
         y = np.concatenate((y_train, y_train_dev))
 
         metrics = self.calculate_metrics((x, y), (x_test, y_test))
+        logger.info(metrics)
 
         pca_plot = PCA_Plot(self, x_train, y_train,
                             self.config.n_clusters,
@@ -126,9 +131,13 @@ class DECv2(dec_keras.DEC):
 
         cmap = self.get_cluster_map(x_train, y_train)
 
+        report = {
+            'save_dir': save_dir,
+            'name': name,
+            'metrics': metrics,
+            'cmap': cmap,
+            'clicks': None,}
         with open(os.path.join(self.config.save_dir, 'report.pkl'), 'wb') as f:
-            pickle.dump({
-                'save_dir': save_dir,
-                'name': name,
-                'metrics': metrics,
-                'cmap': cmap}, f)
+            pickle.dump(report, f)
+
+        return report
