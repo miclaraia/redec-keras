@@ -218,6 +218,36 @@ class Metrics:
         with open(fname, 'wb') as f:
             pickle.dump(self, f)
 
+    def _plot_ax(self, ax, key,
+                 best=None,
+                 add_x=None):
+        c = ['#1f77b4', '#ff7f0e']
+        add_x = add_x or 0
+        data = self.zip()
+        key1 = 'train_{}'.format(key)
+        key2 = 'valid_{}'.format(key)
+
+        x = np.array(data['iteration']) + add_x
+        y1, y2 = zip(*data[key])
+
+        if self.best_ite and best:
+            i = np.where(x > self.best_ite)[0][0]
+            if best == 'before':
+                ax.plot(x[:i], y1[:i], c=c[0], alpha=1)
+                ax.plot(x[:i], y2[:i], c=c[1], alpha=1)
+                ax.set_xlim((0, self.best_ite))
+            elif best == 'after':
+                i -= 1
+                ax.plot(x[i:], y1[i:], c=c[0], alpha=.3)
+                ax.plot(x[i:], y2[i:], c=c[1], alpha=.3)
+        else:
+            ax.plot(x, y1)
+            ax.plot(x, y2)
+            ax.set_xlim((min(x), max(x)))
+
+        ax.legend([key1, key2])
+        ax.set_ylim((0, 1))
+
     def _plot_one(self, ax, key, title=None, standard_metrics=None):
         data = self.zip()
         key1 = 'train_{}'.format(key)
@@ -258,11 +288,12 @@ class MetricsCombined:
         self.multitask = multitask
         self.redec = redec
 
-    def plot(self, fig, title=None):
+    def plot(self, fig, title=None, metrics=None):
+        metrics = metrics or ['f1c']
         c = ['#1f77b4', '#ff7f0e']
         data_m = self.multitask.zip()
         data_r = self.redec.zip()
-        for i, key in enumerate(self.multitask._metric_names):
+        for i, key in enumerate(metrics):
             key1 = 'train_{}'.format(key)
             key2 = 'valid_{}'.format(key)
 
@@ -302,6 +333,24 @@ class MetricsCombined:
         fig.suptitle(title)
         return fig
 
+    def plot_v2(self, fig, title=None, standard_metrics=None, plot_shadow=True):
+        axes = fig.subplots(1,2)
+        axes[1].set_yticks([])
+        fig.subplots_adjust(wspace=0)
+
+        self.multitask._plot_ax(axes[0], 'f1c', best='before')
+        if plot_shadow:
+            self.multitask._plot_ax(axes[1], 'f1c', best='after')
+
+        self.redec._plot_ax(axes[1], 'f1c', add_x=self.multitask.best_ite)
+
+        standard_metrics.plot(axes[0], 'f1c', None)
+        standard_metrics.plot(axes[1], 'f1c', True)
+
+        fig.suptitle(title)
+
+        return fig, axes
+
 
 class StandardMetrics:
 
@@ -318,6 +367,17 @@ class StandardMetrics:
             writer = csv.DictWriter(f, fieldnames=self.fields)
             for name in self.metrics:
                 writer.writerow(self.metrics[name])
+
+    def dump_json(self, fname):
+        with open(fname, 'w') as f:
+            json.dump(self.metrics, f)
+
+    @classmethod
+    def load(cls, fname):
+        with open(fname, 'r') as f:
+            self = cls()
+            self.metrics = json.load(f)
+        return self
 
     def to_df(self):
         return pandas.DataFrame(list(self.metrics.values()), columns=self.fields)
@@ -348,8 +408,26 @@ class StandardMetrics:
         return {
             'name': name, 'f1': f1, 'h': h, 'nmi': nmi,
             'precision': precision, 'recall': recall}
+
+    # def plot(self, ax, key, labels=True):
+        # if key == 'f1c':
+            # key = 'f1'
+        # if key in self.fields:
+            # l = list(self.metrics)
+            # y = [self.metrics[i][key] for i in l]
+
+            # ax2 = ax.twinx()
+            # ax2.set_yticks(y)
+            # if not labels:
+                # l = []
+            # ax2.set_yticklabels(l)
+
+            # for _y in y:
+                # ax2.axhline(_y, linestyle='--', alpha=.5)
+
+            # ax2.set_ylim(ax.get_ylim())
     
-    def plot(self, ax, key):
+    def plot(self, ax, key, labels=True):
         if key == 'f1c':
             key = 'f1'
         if key in self.fields:
@@ -358,6 +436,8 @@ class StandardMetrics:
 
             ax2 = ax.twinx()
             ax2.set_yticks(y)
+            if not labels:
+                l = []
             ax2.set_yticklabels(l)
 
             for _y in y:
