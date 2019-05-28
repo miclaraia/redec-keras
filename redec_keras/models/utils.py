@@ -391,8 +391,10 @@ def get_cluster_to_label_mapping_safe(y, y_pred, n_classes, n_clusters, toprint=
     majority_class_pred = np.zeros(y.shape)
     for cluster in range(n_clusters):
         cluster_indices = np.where(y_pred == cluster)[0]
+
         n_assigned_examples = cluster_indices.shape[0]
         n_assigned_list.append(n_assigned_examples)
+
         cluster_labels = one_hot_encoded[cluster_indices]
         cluster_label_fractions = np.mean(cluster_labels, axis=0)
         majority_cluster_class = np.argmax(cluster_label_fractions)
@@ -420,7 +422,9 @@ def get_cluster_to_label_mapping_safe(y, y_pred, n_classes, n_clusters, toprint=
         one_hot = np_utils.to_categorical(y_pred[np.where(y==diff)[0]], \
                                             len(cluster_to_label_mapping))
 
-        cluster_to_label_mapping[np.argmax(np.sum(one_hot, axis=0))] = int(diff)
+        cluster = np.argmax(np.sum(one_hot, axis=0))
+        cluster_to_label_mapping[cluster] = int(diff)
+        majority_class_fractions[cluster] = 1-majority_class_fractions[cluster]
     if toprint:
         print(cluster_to_label_mapping)
     return cluster_to_label_mapping, n_assigned_list, majority_class_fractions

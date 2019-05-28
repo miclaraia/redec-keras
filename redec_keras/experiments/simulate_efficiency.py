@@ -37,34 +37,32 @@ class EfficiencyStudy:
         Count how many clicks this DEC model would need to classify all subjects
         """
         click_counter = 0
-        not_seen = set([x for x in range(len(y))])
-        while not_seen:
-            for i in range(n_clusters):
-                assigned = set(np.where(y_pred == i)[0].tolist())
 
-                assigned = assigned & not_seen
-                if not assigned:
-                    continue
+        for i in range(n_clusters):
+            cluster_subjects = np.where(y_pred == i)[0]
+            if len(cluster_subjects) == 0:
+                continue
 
-                if sample_size < len(assigned):
-                    sample = set(random.sample(assigned, sample_size))
-                else:
-                    sample = assigned
+            cluster_permutation = np.random.permutation(cluster_subjects)
 
-                not_seen = not_seen - sample
-                sample = list(sample)
-                mc = Counter(y[sample]).most_common()[0][0]
+            n = len(cluster_permutation) % sample_size
+            diff = sample_size - n
+            if n > 0:
+                cluster_permutation = np.concatenate((
+                    cluster_permutation,
+                    np.random.choice(cluster_permutation[:-n], diff)))
 
-                n_majority = np.sum(y[sample] == mc)
-                n_minority = np.sum(y[sample] != mc)
-                # print('mc', mc)
-                # print('sample', sample)
-                # print('y', y[sample])
-                # print('bool', y[sample] == mc)
-                # print(n_majority, n_minority, len(sample))
-                assert n_majority + n_minority == len(sample)
+            j = 0
+            while j < len(cluster_permutation):
+                sample = y[cluster_permutation[j:j+sample_size]]
+                labels, counts = np.unique(sample, return_counts=True)
 
-                click_counter += n_minority
+                j += sample_size
+
+                # print(counts)
+                if min(counts) < sample_size:
+                    click_counter += min(counts)
         print(click_counter)
+        print(np.unique(y, return_counts=True))
         return click_counter
 
